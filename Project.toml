@@ -1,0 +1,10 @@
+name = "Wordlebot"
+uuid = "0af3a903-f8c1-4564-b73b-78eb2b504ece"
+authors = ["Graham Hill <gthill97@gmail.com>"]
+version = "0.1.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
