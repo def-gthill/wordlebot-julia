@@ -1,0 +1,1 @@
+julia --project=@. src/Wordlebot.jl

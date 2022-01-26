@@ -3,6 +3,10 @@ uuid = "0af3a903-f8c1-4564-b73b-78eb2b504ece"
 authors = ["Graham Hill <gthill97@gmail.com>"]
 version = "0.1.0"
 
+[deps]
+EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
+FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
+
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 

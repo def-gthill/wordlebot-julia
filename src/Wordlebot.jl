@@ -1,8 +1,18 @@
 module Wordlebot
 
+include("Wordlist.jl")
+
+import .Wordlist
+
 export cluefor, cluefor_text
 
 const CLUE_CHARS = "_?\$"
+
+function main()
+    guesses, targets = Wordlist.load()
+    println(length(guesses))
+    println(length(targets))
+end
 
 function cluefor(guess::AbstractString, target::AbstractString)::Vector{Int8}
     result = zeros(Int8, length(target))
@@ -48,5 +58,7 @@ function cluefor_text(guess::AbstractString, target::AbstractString)::String
     end
     String(clue_chars)
 end
+
+main()
 
 end # module
