@@ -34,22 +34,23 @@ end
 function mark_weak_matches!(result, guess, target, unmatched_indices)
     for (i, char) in pairs(guess)
         if result[i] > 0 continue end
-        matching_index = first_or_nothing(unmatched_indices) do j
+        matching_index = first_or_zero(unmatched_indices) do j
             char == target[j]
         end
-        if matching_index !== nothing
+        if matching_index > 0
             result[i] = 1
             delete!(unmatched_indices, matching_index)
         end
     end
 end
 
-function first_or_nothing(f, c)
+function first_or_zero(f, c)
     for elem in c
         if f(elem)
             return elem
         end
     end
+    0
 end
 
 function cluefor_text(guess::AbstractString, target::AbstractString)::String
