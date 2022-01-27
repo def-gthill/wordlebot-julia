@@ -4,14 +4,70 @@ include("Wordlist.jl")
 
 import .Wordlist
 
-export cluefor, cluefor_text
+export meanturns, meaninfo, cluefor, cluefor_text
 
 const CLUE_CHARS = "_?\$"
 
 function main()
     guesses, targets = Wordlist.load()
-    println(length(guesses))
-    println(length(targets))
+    remaining_targets = targets
+
+    guess_number = 1
+    clue = nothing
+    while clue != "\$\$\$\$\$"
+        println("Guess $guess_number")
+        if isempty(remaining_targets)
+            println("I don't get it!")
+            return
+        else
+            best_guess_list = best_guesses(guesses, remaining_targets)
+            best_guess = first(best_guess_list)
+            print("$best_guess ($(length(remaining_targets)) words remaining)")
+            remaining_targets = filter(
+                word -> fitsclue_text(best_guess, word, clue),
+                remaining_targets,
+            )
+            guess_number += 1
+        end
+    end
+    
+    println("Yay!")
+end
+
+function best_guesses(
+    guesses::Vector{<:AbstractString},
+    targets::Vector{<:AbstractString},
+)::Vector{AbstractString}
+    sort(guesses, by = guess -> meanturns(guess, targets))
+end
+
+function meanturns(
+    guess::AbstractString,
+    targets::Vector{<:AbstractString},
+    future_info::Real = 3.0,
+)::Float64
+    n = length(targets)
+    if guess in targets
+        result = (n - 1) / n
+        if length(targets) > 1
+            result *= (1 + (log(n) - meaninfo(guess, targets)) / future_info)
+        end
+        result
+    else
+        (1 + (log(n) - meaninfo(guess, targets)) / future_info)
+    end
+end
+
+function meaninfo(guess::AbstractString, targets::Vector{<:AbstractString})::Float64
+    counts = Dict{Vector{Int8}, Int16}()
+    for target in targets
+        if guess != target
+            clue = cluefor(guess, target)
+            counts[clue] = get(counts, clue, 0) + 1
+        end
+    end
+    n = length(targets)
+    sum(c -> c * log(n / c), values(counts)) / sum(values(counts))
 end
 
 function cluefor(guess::AbstractString, target::AbstractString)::Vector{Int8}
@@ -53,6 +109,12 @@ function first_or_zero(f, c)
     0
 end
 
+function fitsclue_text(
+    guess::AbstractString, target::AbstractString, clue::AbstractString
+)::Bool
+    cluefor_text(guess, target) == clue
+end
+
 function cluefor_text(guess::AbstractString, target::AbstractString)::String
     clue_chars = map(cluefor(guess, target)) do i
         CLUE_CHARS[i + 1]
@@ -60,6 +122,8 @@ function cluefor_text(guess::AbstractString, target::AbstractString)::String
     String(clue_chars)
 end
 
-main()
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end
 
 end # module

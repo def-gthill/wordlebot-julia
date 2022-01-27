@@ -27,3 +27,22 @@ using Wordlebot
     @test cluefor("looks", "panic") == zeros(Int8, 5)
     @test cluefor("scrap", "craps") == ones(Int8, 5)
 end
+
+const example_targets = ["tiles", "times", "panic"]
+const info_21 = (2 * log(3 / 2) + log(3)) / 3
+
+@testset "meaninfo" begin
+    @test meaninfo("tires", example_targets) == info_21
+    @test meaninfo("looks", example_targets) == log(3)
+    @test meaninfo("panic", example_targets) == log(3 / 2)
+    @test meaninfo("tiles", example_targets) == log(3)
+end
+
+@testset "meanturns" begin
+    @test meanturns("panic", ["panic"]) == 0
+    @test meanturns("looks", ["panic"]) == 1
+    @test meanturns("tiles", example_targets) == 2 / 3
+    @test meanturns("looks", example_targets) == 1
+    @test meanturns("panic", example_targets, 3.0) == 2 / 3 * (1 + log(2) / 3)
+    @test meanturns("tires", example_targets, 3.0) == 1 + (log(3) - info_21) / 3
+end
