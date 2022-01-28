@@ -40,7 +40,7 @@ function find_words(path)
         sort!(lists, by=length, rev=true)
         guesses=[lists[1]; lists[2]]
         targets=lists[2]
-        (guesses=guesses, targets=targets)
+        (guesses=sort(guesses), targets=sort(targets))
     end
 end
 

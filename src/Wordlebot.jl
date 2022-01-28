@@ -84,7 +84,7 @@ function best_guesses(
     targets::Vector{<:AbstractString},
 )::Vector{Guess}
     result = [Guess(guess, meanturns_better(guess, targets)) for guess in guesses]
-    sort(result, by = guess -> guess.score)
+    sort(result, by = guess -> (guess.score, guess.guess))
 end
 
 struct Guess
