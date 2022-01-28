@@ -46,3 +46,12 @@ end
     @test meanturns("panic", example_targets, 3.0) == 2 / 3 * (1 + log(2) / 3)
     @test meanturns("tires", example_targets, 3.0) == 1 + (log(3) - info_21) / 3
 end
+
+@testset "meanturns_better" begin
+    @test meanturns_better("panic", ["panic"]) == 0
+    @test meanturns_better("looks", ["panic"]) == 1
+    @test meanturns_better("tiles", example_targets) == 2 / 3
+    @test meanturns_better("looks", example_targets) == 1
+    @test meanturns_better("panic", example_targets) == (2 / 3) * (3 / 2)
+    @test meanturns_better("tires", example_targets) == (2 / 3) * (3 / 2) + 1 / 3
+end

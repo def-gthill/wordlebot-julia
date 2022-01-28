@@ -8,7 +8,7 @@ import Random
 
 import .Wordlist
 
-export meanturns, meaninfo, cluefor, cluefor_text
+export meanturns, meanturns_better, meaninfo, cluefor, cluefor_text
 
 const CLUE_CHARS = "_?\$"
 
@@ -83,13 +83,42 @@ function best_guesses(
     guesses::Vector{<:AbstractString},
     targets::Vector{<:AbstractString},
 )::Vector{Guess}
-    result = [Guess(guess, meanturns(guess, targets)) for guess in guesses]
+    result = [Guess(guess, meanturns_better(guess, targets)) for guess in guesses]
     sort(result, by = guess -> guess.score)
 end
 
 struct Guess
     guess::AbstractString
     score::Float64
+end
+
+function meanturns_better(
+    guess::AbstractString,
+    targets::Vector{<:AbstractString},
+    future_info::Real = 3.0,
+)::Float64
+    counts = Dict{Vector{Int8}, Int16}()
+    for target in targets
+        if guess != target
+            clue = cluefor(guess, target)
+            counts[clue] = get(counts, clue, 0) + 1
+        end
+    end
+    n = length(targets)
+    turns = 1
+    if n > 1
+        total = sum(values(counts)) do c
+            c * max(
+                1 + (log(n) - log(n / c)) / future_info,
+                (2 * c - 1) / c,
+            )
+        end
+        turns *= total / sum(values(counts))
+    end
+    if guess in targets
+        turns *= (n - 1) / n
+    end
+    turns
 end
 
 function meanturns(
