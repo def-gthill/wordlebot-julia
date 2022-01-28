@@ -4,6 +4,7 @@ authors = ["Graham Hill <gthill97@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
 

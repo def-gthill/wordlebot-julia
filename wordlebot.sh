@@ -1,1 +1,1 @@
-julia --project=@. src/Wordlebot.jl
+julia --project=@. src/Wordlebot.jl $@

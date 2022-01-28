@@ -2,6 +2,10 @@ module Wordlebot
 
 include("Wordlist.jl")
 
+import ArgParse
+import Base.Iterators
+import Random
+
 import .Wordlist
 
 export meanturns, meaninfo, cluefor, cluefor_text
@@ -9,7 +13,14 @@ export meanturns, meaninfo, cluefor, cluefor_text
 const CLUE_CHARS = "_?\$"
 
 function main()
+    parsed_args = parse_args()
+    all_words = parsed_args["all"]
+    randomize = parsed_args["randomize"]
+
     guesses, targets = Wordlist.load()
+    if !all_words
+        guesses = targets
+    end
     remaining_targets = targets
 
     guess_number = 1
@@ -20,8 +31,17 @@ function main()
             println("I don't get it!")
             return
         else
-            @time best_guess_list = best_guesses(guesses, remaining_targets)
-            best_guess = first(best_guess_list)
+            best_guess_list = best_guesses(guesses, remaining_targets)
+            best_guess_with_score = first(best_guess_list)
+            if randomize
+                decent_guesses = collect(
+                    Iterators.takewhile(best_guess_list) do g
+                        g.score - best_guess_with_score.score < 0.05
+                    end
+                )
+                best_guess_with_score = first(Random.shuffle(decent_guesses))
+            end
+            best_guess = best_guess_with_score.guess
             message = if length(remaining_targets) == 1
                 "I know this is the answer!"
             else
@@ -44,12 +64,32 @@ function main()
     println("Yay!")
 end
 
+function parse_args()
+    s = ArgParse.ArgParseSettings()
+
+    ArgParse.@add_arg_table s begin
+        "--all"
+            help = "allow all valid guesses"
+            action = :store_true
+        "--randomize"
+            help = "choose randomly from amongst the best guesses"
+            action = :store_true
+    end
+
+    ArgParse.parse_args(s)
+end
+
 function best_guesses(
     guesses::Vector{<:AbstractString},
     targets::Vector{<:AbstractString},
-)::Vector{AbstractString}
-    scores = Dict(guess => meanturns(guess, targets) for guess in guesses)
-    sort(guesses, by = guess -> scores[guess])
+)::Vector{Guess}
+    result = [Guess(guess, meanturns(guess, targets)) for guess in guesses]
+    sort(result, by = guess -> guess.score)
+end
+
+struct Guess
+    guess::AbstractString
+    score::Float64
 end
 
 function meanturns(
