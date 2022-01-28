@@ -20,9 +20,19 @@ function main()
             println("I don't get it!")
             return
         else
-            best_guess_list = best_guesses(guesses, remaining_targets)
+            @time best_guess_list = best_guesses(guesses, remaining_targets)
             best_guess = first(best_guess_list)
-            print("$best_guess ($(length(remaining_targets)) words remaining)")
+            message = if length(remaining_targets) == 1
+                "I know this is the answer!"
+            else
+                "$(length(remaining_targets)) words remaining"
+            end
+            println("$best_guess ($message)")
+            clue = readline(keep = false)
+            while !(length(clue) == 5 && Set(clue) ⊆ Set(CLUE_CHARS))
+                println("Invalid clue; must have five characters, all _, ?, or \$")
+                clue = readline(keep = false)
+            end
             remaining_targets = filter(
                 word -> fitsclue_text(best_guess, word, clue),
                 remaining_targets,
@@ -38,7 +48,8 @@ function best_guesses(
     guesses::Vector{<:AbstractString},
     targets::Vector{<:AbstractString},
 )::Vector{AbstractString}
-    sort(guesses, by = guess -> meanturns(guess, targets))
+    scores = Dict(guess => meanturns(guess, targets) for guess in guesses)
+    sort(guesses, by = guess -> scores[guess])
 end
 
 function meanturns(

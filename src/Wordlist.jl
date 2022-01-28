@@ -56,6 +56,6 @@ function dump_words(words, path)
     end
 end
 
-load_words(path) = collect(eachline(string(path)))
+load_words(path) = sort(collect(eachline(string(path))))
 
 end #module
