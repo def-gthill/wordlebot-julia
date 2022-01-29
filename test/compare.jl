@@ -3,6 +3,25 @@ using Printf
 using Wordlebot
 using FilePathsBase; using FilePathsBase: /
 
+function awfulbot(guess, targets)
+    if guess in targets
+        if length(targets) == 1
+            0
+        else
+            counts = Dict{Vector{Int8}, Int16}()
+            for target in targets
+                if guess != target
+                    clue = cluefor(guess, target)
+                    counts[clue] = get(counts, clue, 0) + 1
+                end
+            end
+            1 - maximum(values(counts)) / length(targets)
+        end
+    else
+        1
+    end
+end
+
 const strategies = [
     (
         "mean_info",
@@ -23,6 +42,11 @@ const strategies = [
         "baseline",
         "Guess a random word that fits all the clues",
         (g, t) -> GuessRanker((g_, t_) -> g_ in t_ ? 0 : 1, g, t, true)
+    ),
+    (
+        "awful",
+        "Choose the least informative word that fits all the clues",
+        (g, t) -> GuessRanker(awfulbot, g, t)
     )
 ]
 
