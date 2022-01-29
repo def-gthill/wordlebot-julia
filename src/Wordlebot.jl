@@ -8,7 +8,7 @@ import Random
 
 import .Wordlist
 
-export Player, Turn
+export Player, Turn, GuessRanker
 export guess!, play!
 export meanturns, meanturns_better, meaninfo, cluefor, cluefor_text
 
@@ -23,31 +23,22 @@ function main()
     if !all_words
         guesses = targets
     end
-    remaining_targets = targets
+
+    player = GuessRanker(meanturns_better, guesses, targets, randomize)
 
     guess_number = 1
     clue = nothing
     while clue != "\$\$\$\$\$"
         println("Guess $guess_number")
-        if isempty(remaining_targets)
+        best_guess = guess!(player, clue)
+        if isempty(best_guess)
             println("I don't get it!")
             return
         else
-            best_guess_list = best_guesses(guesses, remaining_targets)
-            best_guess_with_score = first(best_guess_list)
-            if randomize
-                decent_guesses = collect(
-                    Iterators.takewhile(best_guess_list) do g
-                        g.score - best_guess_with_score.score < 0.05
-                    end
-                )
-                best_guess_with_score = first(Random.shuffle(decent_guesses))
-            end
-            best_guess = best_guess_with_score.guess
-            message = if length(remaining_targets) == 1
+            message = if length(player.remaining_targets) == 1
                 "I know this is the answer!"
             else
-                "$(length(remaining_targets)) words remaining"
+                "$(length(player.remaining_targets)) words remaining"
             end
             println("$best_guess ($message)")
             clue = readline(keep = false)
@@ -55,10 +46,6 @@ function main()
                 println("Invalid clue; must have five characters, all _, ?, or \$")
                 clue = readline(keep = false)
             end
-            remaining_targets = filter(
-                word -> fitsclue_text(best_guess, word, clue),
-                remaining_targets,
-            )
             guess_number += 1
         end
     end
@@ -103,11 +90,49 @@ struct Turn
     clue::String
 end
 
+mutable struct GuessRanker <: Player
+    strategy::Function
+    allowed_guesses::Vector{<:AbstractString}
+    allowed_targets::Vector{<:AbstractString}
+    randomize::Bool
+    last_guess::Union{AbstractString, Nothing}
+    remaining_targets::Vector{<:AbstractString}
+    function GuessRanker(strategy, allowed_guesses, allowed_targets, randomize = false)
+        new(strategy, allowed_guesses, allowed_targets, randomize, nothing, allowed_targets)
+    end
+end
+
+function guess!(player::GuessRanker, clue::Union{String, Nothing})::AbstractString
+    if player.last_guess !== nothing
+        player.remaining_targets = filter(
+            word -> fitsclue_text(player.last_guess, word, clue),
+            player.remaining_targets,
+        )
+    end
+    if isempty(player.remaining_targets)
+        return ""
+    end
+    best_guess_list = best_guesses(
+        player.strategy, player.allowed_guesses, player.remaining_targets
+    )
+    best_guess_with_score = first(best_guess_list)
+    if player.randomize
+        decent_guesses = collect(
+            Iterators.takewhile(best_guess_list) do g
+                g.score - best_guess_with_score.score < 0.05
+            end
+        )
+        best_guess_with_score = first(Random.shuffle(decent_guesses))
+    end
+    player.last_guess = best_guess_with_score.guess
+end
+
 function best_guesses(
+    strategy::Function,
     guesses::Vector{<:AbstractString},
     targets::Vector{<:AbstractString},
 )::Vector{Guess}
-    result = [Guess(guess, meanturns_better(guess, targets)) for guess in guesses]
+    result = [Guess(guess, strategy(guess, targets)) for guess in guesses]
     sort(result, by = guess -> (guess.score, guess.guess))
 end
 
