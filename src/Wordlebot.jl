@@ -8,6 +8,8 @@ import Random
 
 import .Wordlist
 
+export Player, Turn
+export guess!, play!
 export meanturns, meanturns_better, meaninfo, cluefor, cluefor_text
 
 const CLUE_CHARS = "_?\$"
@@ -67,7 +69,7 @@ end
 function parse_args()
     s = ArgParse.ArgParseSettings()
 
-    ArgParse.@add_arg_table s begin
+    ArgParse.@add_arg_table! s begin
         "--all"
             help = "allow all valid guesses"
             action = :store_true
@@ -77,6 +79,28 @@ function parse_args()
     end
 
     ArgParse.parse_args(s)
+end
+
+abstract type Player end
+
+function guess!(player::Player, clue::Union{String, Nothing})::AbstractString
+    ""
+end
+
+function play!(player::Player, target::AbstractString)::Vector{Turn}
+    clue = nothing
+    result = Vector{Turn}()
+    while !(clue == "\$\$\$\$\$" || clue == "")
+        guess = guess!(player, clue)
+        clue = isempty(guess) ? "" : cluefor_text(guess, target)
+        push!(result, Turn(guess, clue))
+    end
+    result
+end
+
+struct Turn
+    guess::AbstractString
+    clue::String
 end
 
 function best_guesses(

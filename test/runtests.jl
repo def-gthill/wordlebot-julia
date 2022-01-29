@@ -55,3 +55,36 @@ end
     @test meanturns_better("panic", example_targets) == (2 / 3) * (3 / 2)
     @test meanturns_better("tires", example_targets) == (2 / 3) * (3 / 2) + 1 / 3
 end
+
+const dummy_words = [
+    "tangy",
+    "solar",
+    "proxy",
+]
+
+mutable struct DummyPlayer <: Player
+    index::Int8
+end
+
+DummyPlayer() = DummyPlayer(1)
+
+function Wordlebot.guess!(player::DummyPlayer, clue::Union{String, Nothing})::AbstractString
+    cur_index = player.index
+    player.index += 1
+    get(dummy_words, cur_index, "")
+end
+
+@testset "play!" begin
+    @test play!(DummyPlayer(), "tangy") == [Turn("tangy", "\$\$\$\$\$")]
+    @test play!(DummyPlayer(), "proxy") == [
+        Turn("tangy", "____\$"),
+        Turn("solar", "_?__?"),
+        Turn("proxy", "\$\$\$\$\$"),
+    ]
+    @test play!(DummyPlayer(), "perky") == [
+        Turn("tangy", "____\$"),
+        Turn("solar", "____?"),
+        Turn("proxy", "\$?__\$"),
+        Turn("", ""),
+    ]
+end
