@@ -14,6 +14,16 @@ const strategies = [
         "Avoid small groups",
         (g, t) -> GuessRanker(meanturns_better, g, t),
     ),
+    (
+        "avoid_small_random",
+        "Avoid small groups, randomized",
+        (g, t) -> GuessRanker(meanturns_better, g, t, true),
+    ),
+    (
+        "baseline",
+        "Guess a random word that fits all the clues",
+        (g, t) -> GuessRanker((g_, t_) -> g_ in t_ ? 0 : 1, g, t, true)
+    )
 ]
 
 const resultspath = p"test/results"
